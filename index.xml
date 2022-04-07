@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>carlc27843</title>
+    <link>https://carlc27843.github.io/</link>
+    <description>Recent content on carlc27843</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 04 Apr 2022 21:06:17 -1000</lastBuildDate><atom:link href="https://carlc27843.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>About</title>
+      <link>https://carlc27843.github.io/about/</link>
+      <pubDate>Tue, 05 Apr 2022 16:40:51 -1000</pubDate>
+      
+      <guid>https://carlc27843.github.io/about/</guid>
+      <description>About the About page.</description>
+    </item>
+    
+    <item>
+      <title>Picoscript</title>
+      <link>https://carlc27843.github.io/post/picoscript/</link>
+      <pubDate>Mon, 04 Apr 2022 21:06:17 -1000</pubDate>
+      
+      <guid>https://carlc27843.github.io/post/picoscript/</guid>
+      <description>Picoscript is a custom script system implemented in PICO-8 lua which allowed the PICO-8 port of Nebulus to use ROM data to store logic beyond the console&amp;rsquo;s limit of 8192 lua tokens.
+The fantasy console PICO-8 has some strict input cartridge limits:
+ 15616 compressed lua code characters (65536 uncompressed chars) 17152 bytes ROM 8192 lua code tokens  Its runtime limits are more generous: 64KB RAM and 2MB lua memory. This enables a cart to store data compressed, and uncompress it at runtime, for example during initialization.
+However lua tokens cannot be compressed, and PICO-8 does not expose any kind of lua load from strings.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<meta name="HandheldFriendly" content="True" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<meta name="generator" content="Hugo 0.96.0" />
+
+
+<link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/dsrkafuu/dsr-cdn-main@1/images/favicons/dsrca.ico" />
+
+
+
+<title>Picoscript - carlc27843</title>
+
+
+<meta name="author" content="carlc27843" />
+
+
+<meta name="description" content="A minimal Hugo theme with nice theme color." />
+
+
+<meta name="keywords" content="pico-8, lua, script" />
+
+
+<meta property="og:title" content="Picoscript" />
+<meta name="twitter:title" content="Picoscript" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://carlc27843.github.io/post/picoscript/" /><meta property="og:description" content="Picoscript is a custom script system implemented in PICO-8 lua which allowed the PICO-8 port of Nebulus to use ROM data to store logic beyond the console&rsquo;s limit of 8192 lua tokens.
+The fantasy console PICO-8 has some strict input cartridge limits:
+ 15616 compressed lua code characters (65536 uncompressed chars) 17152 bytes ROM 8192 lua code tokens  Its runtime limits are more generous: 64KB RAM and 2MB lua memory. This enables a cart to store data compressed, and uncompress it at runtime, for example during initialization.
+However lua tokens cannot be compressed, and PICO-8 does not expose any kind of lua load from strings." />
+<meta name="twitter:description" content="Picoscript is a custom script system implemented in PICO-8 lua which allowed the PICO-8 port of Nebulus to use ROM data to store logic beyond the console&rsquo;s limit of 8192 lua tokens.
+The fantasy console PICO-8 has some strict input cartridge limits:
+ 15616 compressed lua code characters (65536 uncompressed chars) 17152 bytes ROM 8192 lua code tokens  Its runtime limits are more generous: 64KB RAM and 2MB lua memory. This enables a cart to store data compressed, and uncompress it at runtime, for example during initialization.
+However lua tokens cannot be compressed, and PICO-8 does not expose any kind of lua load from strings." /><meta property="og:image" content="https://carlc27843.github.io/img/og.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://carlc27843.github.io/img/og.png" /><meta property="article:published_time" content="2022-04-04T21:06:17-10:00" /><meta property="article:modified_time" content="2022-04-04T21:06:17-10:00" />
+
+
+<style>
+    @media (prefers-color-scheme: dark) {
+        body[data-theme='auto'] img {
+            filter: brightness(60%);
+        }
+    }
+
+    body[data-theme='dark'] img {
+        filter: brightness(60%);
+    }
+</style>
+
+
+
+
+<link rel="stylesheet" href="https://carlc27843.github.io/assets/css/fuji.min.css" />
+
+
+
+
+
+
+
+
+</head>
+
+<body
+  data-theme="dark"
+  data-theme-auto='false'
+  >
+    <script data-cfasync="false">
+  
+  var fujiThemeData = localStorage.getItem('fuji_data-theme');
+  
+  if (!fujiThemeData) {
+    localStorage.setItem('fuji_data-theme', 'auto');
+  } else {
+    
+    if (fujiThemeData !== 'auto') {
+      document.body.setAttribute('data-theme', fujiThemeData === 'dark' ? 'dark' : 'light');
+    }
+  }
+</script>
+
+    <header>
+    <div class="container-lg clearfix">
+        <div class="col-12 header">
+            <a class="title-main" href="https://carlc27843.github.io/">carlc27843</a>
+            
+            <span class="title-sub">Programming and whatnot.</span>
+            
+        </div>
+    </div>
+</header>
+
+    <main>
+        <div class="container-lg clearfix">
+            
+            <div class="col-12 col-md-9 float-left content">
+                
+<article>
+    
+    <h2 class="post-item post-title">
+        <a href="https://carlc27843.github.io/post/picoscript/">Picoscript</a>
+    </h2>
+    <div class="post-item post-meta">
+        <span><i class="iconfont icon-today-sharp"></i>&nbsp;2022-04-04</span>
+
+
+
+<span><i class="iconfont icon-pricetags-sharp"></i>&nbsp;<a href="/tags/pico-8">pico-8</a>&nbsp;<a href="/tags/lua">lua</a>&nbsp;<a href="/tags/script">script</a>&nbsp;</span>
+
+    </div>
+    
+    <div class="post-content markdown-body">
+        <p><strong>Picoscript</strong> is a custom script system implemented in PICO-8 lua which allowed the <a href="https://carlc27843.itch.io/nebulus" target="_blank">PICO-8 port of Nebulus</a> to use ROM data to store logic beyond the console&rsquo;s limit of 8192 lua tokens.</p>
+<p>The fantasy console <a href="https://www.lexaloffle.com/pico-8.php" target="_blank">PICO-8</a> has some strict input cartridge limits:</p>
+<ul>
+<li>15616 compressed lua code characters (65536 uncompressed chars)</li>
+<li>17152 bytes ROM</li>
+<li>8192 lua code tokens</li>
+</ul>
+<p>Its runtime limits are more generous: 64KB RAM and 2MB lua memory. This enables a cart to store data compressed, and uncompress it at runtime, for example during initialization.</p>
+<p>However lua tokens cannot be compressed, and PICO-8 does not expose any kind of lua <code>load</code> from strings. So if you want your cart to contain more logic than 8192 tokens allow you have to resort to some kind of data-driven custom script system implemented in lua (which itself consumes precious tokens). These script systems could take many possible forms, ranging from lists of functions to call with arguments (encoded as a single string) to domain-specific languages with bytecode interpreters (where the bytecode is stored in ROM or lua strings).</p>
+<p>Picoscript uses a slightly restricted subset of PICO-8 lua as the source language, and targets bytecode which is interpreted at init time to create lua closures that can be called directly from normal PICO-8 lua code. Using PICO-8 lua as the source language makes it very easy to convert functions to and from picoscript. It&rsquo;s possible to create a new function in lua, test it, debug it, then promote it to picoscript to save tokens. Or try making a function picoscripted, and revert it to lua if it&rsquo;s too slow.</p>
+<h3 id="picoscript-build-macro">Picoscript build macro</h3>
+<p>Here&rsquo;s a very simple function from the Nebulus source code which we&rsquo;ll follow through the picoscript toolchain.</p>
+<pre><code class="language-lua">`picoscript[[]]
+function glstate(st)
+ glstn=st
+ bblf=1
+end
+[[]]`
+</code></pre>
+<p>It just sets a couple of glue screen state global variables. The backticks are triggers for the build script to invoke a macro (that is, call a build-time function), in this case the one called <code>picoscript</code>. The <code>[[]]</code> is just a delimeter used to mark the beginning and end of the quoted code that is passed as a string to the build-time function. So the build script executes this at build time:</p>
+<pre><code class="language-lua">picoscript(&quot;glstate(st)\n glstn=st\n bblf=1\nend&quot;)
+</code></pre>
+<p>Nebulus&rsquo; build script is actually written in PICO-8 compatible lua code, executed by a C program that embeds the excellent <a href="https://github.com/samhocevar/z8lua" target="_blank">z8lua</a>, which is a modified version of the lua 5.2 C library that handles PICO-8 syntax extensions (like short if/while, bitwise operators, etc). That makes it straightforward to make a C function which compiles a lua string and outputs the lua bytecode.</p>
+<h3 id="lua-bytecode">Lua bytecode</h3>
+<p>In <a href="https://www.lua.org/source/5.2/luac.c.html" target="_blank">luac</a> format, the lua bytecode for <code>glstate</code> looks like this:</p>
+<pre><code>main &lt;(string):0,0&gt; (3 instructions at 012A12A8)
+0+ params, 2 slots, 1 upvalue, 0 locals, 1 constant, 1 function
+        1       [4]     CLOSURE         0 0     ; 012A1300
+        2       [1]     SETTABUP        0 -1 0  ; _ENV &quot;glstate&quot;
+        3       [4]     RETURN          0 1
+constants (1) for 012A12A8:
+        1       &quot;glstate&quot;
+locals (0) for 012A12A8:
+upvalues (1) for 012A12A8:
+        0       _ENV    1       0
+
+function &lt;(string):1,4&gt; (3 instructions at 012A1300)
+1 param, 2 slots, 1 upvalue, 1 local, 3 constants, 0 functions
+        1       [2]     SETTABUP        0 -1 0  ; _ENV &quot;glstn&quot;
+        2       [3]     SETTABUP        0 -2 -3 ; _ENV &quot;bblf&quot; 1
+        3       [4]     RETURN          0 1
+constants (3) for 012A1300:
+        1       &quot;glstn&quot;
+        2       &quot;bblf&quot;
+        3       1
+locals (1) for 012A1300:
+        0       st      1       4
+upvalues (1) for 012A1300:
+        0       _ENV    0       0
+</code></pre>
+<p>The lua opcodes are documented in <a href="https://github.com/samhocevar/z8lua/blob/zepto8/lopcodes.h" target="_blank">lopcodes.h</a>.</p>
+<h3 id="picoscript-bytecode">Picoscript bytecode</h3>
+<p>The build step converts the lua opcodes to picoscript codes for the picoscript boot runtime. Here are the codes for <code>glstate</code>:</p>
+<table>
+<thead>
+<tr>
+<th>opcode</th>
+<th>flags</th>
+<th>a</th>
+<th>b</th>
+<th>c</th>
+<th>d</th>
+<th>meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>valop_b</code></td>
+<td><code>b:const</code></td>
+<td><code>0</code></td>
+<td><code>_ENV</code></td>
+<td>n/a</td>
+<td>n/a</td>
+<td>r[0]=_ENV</td>
+</tr>
+<tr>
+<td><code>calld3</code></td>
+<td><code>b:const</code> <code>c:reg</code></td>
+<td><code>0</code></td>
+<td><code>&quot;glstn&quot;</code></td>
+<td><code>1</code></td>
+<td><code>rawset</code></td>
+<td>rawset(r[0],&ldquo;glstn&rdquo;,r[1])</td>
+</tr>
+<tr>
+<td><code>valop_b</code></td>
+<td><code>b:const</code></td>
+<td><code>0</code></td>
+<td><code>_ENV</code></td>
+<td>n/a</td>
+<td>n/a</td>
+<td>r[0]=_ENV</td>
+</tr>
+<tr>
+<td><code>calld3</code></td>
+<td><code>b:const</code> <code>c:imm</code></td>
+<td><code>0</code></td>
+<td><code>&quot;bblf&quot;</code></td>
+<td><code>1</code></td>
+<td><code>rawset</code></td>
+<td>rawset(r[0],&ldquo;bblf&rdquo;,1)</td>
+</tr>
+<tr>
+<td><code>ret</code></td>
+<td><code>b:imm</code></td>
+<td><code>1</code></td>
+<td><code>0</code></td>
+<td>n/a</td>
+<td>n/a</td>
+<td>return unpack(r,1,0)</td>
+</tr>
+</tbody>
+</table>
+<p>Picoscript stores values in one of a few possible places. Immediate constants are 16-bit integers; they&rsquo;re stored directly in the codes. All other constants are combined into a single constant table that&rsquo;s stored in a lua string; a reference to the constant in the form of a 16-bit index into the constant table is stored in the codes. Finally, register references are also stored as small integer indexes directly in the codes. The flags control how the opcode arguments <code>b</code> and <code>c</code> are treated. <code>a</code> is 0 or 1 for jump instructions and a register reference for all other instructions, and <code>d</code> is an immediate value in call instructions or a constant reference for all other instructions that use it.</p>
+<p>Picoscript emulates lua&rsquo;s rules around an internal array of register values. Function parameters appear starting at register index 1. Other registers may be assigned for local variables or temporary intermediate values (such as setting up function call arguments) elsewhere in the array.</p>
+<h3 id="picoscript-bootstrap">Picoscript bootstrap</h3>
+<p>The build step also outputs a function definition table with the name of the function (e.g. &ldquo;glstate&rdquo;) and its length in instructions. The codes are compressed and stored in ROM. There is a <code>psboot</code> function which goes through each picoscript function definition, uncompresses codes, looks up constants, and calls <code>psfun</code> to generate a closure representing the function, then assigns this to a global variable with the name of the function. (The fun thing about <code>psboot</code> is that it is also a picoscripted function so it doesn&rsquo;t take any PICO-8 tokens; it&rsquo;s also implemented to only require bytes for its codes to save space, and doesn&rsquo;t require any constant lookups for itself).</p>
+<pre><code class="language-lua">function psfun(code,ncode)
+ local nfs,nf={}
+ for i=ncode or #code,1,-5 do
+  nf=mkop(nfs,nf,unpack(code,i-4,i))
+  add(nfs,nf)
+ end
+ return function(...)
+  return nf{...} -- call the wrapped picoscript closure with r=arguments
+ end
+end
+</code></pre>
+<p>This takes a table of codes with 5 values per instruction, and optionally the number of codes to wrap. (If you&rsquo;re following along with the Picoscript bytecode example above note that the <code>opcode</code> and <code>flags</code> are combined into one value, and the other four values are the instruction arguments <code>a</code>, <code>b</code>, <code>c</code> and <code>d</code>). For each instruction it calls <code>mkop</code> to create a closure which performs the instruction&rsquo;s operation. The closures are chained together; each one calls the next instruction&rsquo;s closure, which is usually the subsequent instruction but sometimes branches are performed in which case the <code>nfs</code> table is referenced.</p>
+<p>The closure that is returned is variadic (takes a <code>...</code>) - all the arguments are packed into a table which is actually the register array (the <code>r</code> parameter below), and that&rsquo;s how function parameters are placed beginning at index 1. The first instruction&rsquo;s closure <code>nf</code> is called.</p>
+<h3 id="picoscript-operations">Picoscript operations</h3>
+<p>There are 16 possible picoscript operations. Many of them can refer to either a constant or a register with patterns like <code>(kb or r[b])</code> - if the instruction argument is a constant then <code>kb</code> will contain its value, otherwise <code>kb</code> will be <code>false</code> so <code>r[b]</code> will be evaluated. Similarly for <code>kc</code> and <code>r[c]</code>.</p>
+<pre><code class="language-lua">function mkop(nfs,nf,op,a,b,c,d)
+ local kb=op&amp;`fbits.rkb`==0 and b -- note: kb never nil, as picoscript changes nil constant to r[] lookup
+ local kc=op&amp;`fbits.rkc`==0 and c -- note: kc never nil, as picoscript changes nil constant to r[] lookup
+ local af=a!=0
+ return ({
+  function(r) return unpack(r,a,b) end, -- opcode.ret
+  function(r) return (af==r[0] and nfs[b] or nf)(r) end, -- opcode.jump_if_x
+  function(r) r[a]=kb or r[b] return nf(r) end, -- opcode.valop_b
+  function(r) r[a]=not (kb or r[b]) return nf(r) end, -- opcode.valop_not_b
+  function(r) r[a]=(kb or r[b])==(kc or r[c]) return nf(r) end, -- opcode.valop_b_eq_c
+  function(r) r[a]=(kb or r[b])+(kc or r[c]) return nf(r) end, -- opcode.numop_b_add_c
+  function(r) r[a]=(kb or r[b])-(kc or r[c]) return nf(r) end, -- opcode.numop_b_sub_c
+  function(r) r[a]=(kb or r[b])*(kc or r[c]) return nf(r) end, -- opcode.numop_b_mul_c
+  function(r) r[a]=(kb or r[b])/(kc or r[c]) return nf(r) end, -- opcode.numop_b_div_c
+  function(r) r[a]=(kb or r[b])\(kc or r[c]) return nf(r) end, -- opcode.numop_b_idiv_c
+  function(r) r[a]=(kb or r[b])%(kc or r[c]) return nf(r) end, -- opcode.numop_b_mod_c
+  function(r) return (af==((kb or r[b])&lt;(kc or r[c])) and nfs[d] or nf)(r) end, -- opcode.jump_b_lt_c
+  function(r) return (af==((kb or r[b])&lt;=(kc or r[c])) and nfs[d] or nf)(r) end, -- opcode.jump_b_le_c
+  function(r) local x,y,z=r[a](unpack(r,a+1,b))
+   for j=c,d do r[j],x,y=x,y,z end return nf(r) end, -- opcode.call
+  function(r) r[a]=d(kb or r[b],kc or r[c]) return nf(r) end, -- opcode.calld2
+  function(r) d(r[a],kb or r[b],kc or r[c]) return nf(r) end -- opcode.calld3
+ })[1+op%`fbits.code.mask+1`]
+end
+</code></pre>
+<h3 id="operation-tradeoffs">Operation tradeoffs</h3>
+<p>Note that these operation types are not inevitable; you could design a different script system with different tradeoffs. For example I figured concatenating strings would be rarely performed, so picoscript generates a call to a user-defined <code>concat</code> function when the source uses the <code>..</code> lua operator, rather than the operation being intrinsic to mkop. Similarly bitwise operations call their function <code>band</code>, <code>bor</code>, etc. Since calling two-parameter functions that returned a result which was assigned to a register was common the <code>opcode.calld2</code> operation was defined.</p>
+<p>A custom script system also doesn&rsquo;t need to generate closures; it could instead have a bytecode interpreter. At one point Nebulus had such an interpreter and it only took ~200 tokens (compared to picoscript runtime of 450 tokens), but it was significantly slower.</p>
+<h3 id="picoscript-limitations">Picoscript limitations</h3>
+<p>Picoscript as defined has some limitations, such as:</p>
+<ul>
+<li>At most 3 return results are supported. This avoids creating a table every time a function returned results in <code>opcode.call</code> because that was unnecessarily expensive in most cases.</li>
+<li>Tail calls are not supported.</li>
+<li>The only supported upvalue is _ENV.</li>
+<li>In lua when a call to a function appears as the last argument in a function call (such as <code>bar()</code> in <code>foo(x,y,bar())</code>), then all the results of the inner call become arguments for the outer call. Picoscript doesn&rsquo;t support this, and if the last argument is a call it must be enclosed in parentheses to force the lua compiler to truncate results to just one argument (like <code>foo(x,y,(bar()))</code>).</li>
+<li>Generating closures is not supported.</li>
+<li>To avoid needing special operations for table getters and setters, picoscript generates calls to <code>rawget</code> and <code>rawset</code> instead. This means metatables are not supported.</li>
+</ul>
+<p>It&rsquo;s pretty clear that picoscript code will not run as fast as regular PICO-8 lua code. However in Nebulus it was acceptable for much of the initialization, glue screen logic, and even parts of the bonus level.</p>
+<h3 id="pico-8-nebulus-stats">PICO-8 Nebulus stats</h3>
+<p>Here&rsquo;s some stats from Nebulus:</p>
+<ul>
+<li>lua code: 8184 tokens (8 tokens remaining!)</li>
+<li>picoscript code: <strong>4169</strong> tokens saved</li>
+<li>picoscript runtime lua code: 456 tokens used</li>
+<li>ROM used for picoscripted functions: 7181 bytes</li>
+<li>lua chars for constant table (after minify): 1524 bytes (1090 compressed)</li>
+</ul>
+<p>So after compression it averaged to about 2 bytes of ROM/chars for every picoscripted token.</p>
+<p>Here&rsquo;s a list of the functions that were picoscripted:
+progress,
+tbl,
+val,
+glstate,
+pcelputpixmap,
+pokelrpal,
+pixmapinit,
+colorrampinit,
+towerinit,
+waveinit,
+gwavedraw,
+gwavesdraw,
+tileinitlevel,
+levelreset,
+glueinit,
+gameinit,
+skyinit,
+levelinit,
+addbubbles,
+updlevelfishp,
+glwait,
+updtitle,
+updlevelinit,
+updlevelexit,
+updlevelfail,
+updgameover,
+chkhall,
+updhallfame,
+gtrans,
+wavebackup,
+waverestore,
+cacheuitowers,
+easetext,
+drtitle,
+drlevelinit,
+drlevelexit,
+drlevelfail,
+drlevelfish,
+drgameover,
+drhallfame,
+qglue,
+bblinit,
+sfxinit,
+_init,
+nsndnote,
+nsndstep,
+nsndrecordaux,
+nsndrecord,
+nsndinit,
+nsndmusic,
+and nsndsong.</p>
+
+    </div>
+</article>
+
+
+
+
+            </div>
+            <aside class="col-12 col-md-3 float-left sidebar">
+    
+    <div class="sidebar-item sidebar-pages">
+        <h3>Pages</h3>
+        <ul>
+            
+            <li>
+                <a href="/">Posts</a>
+            </li>
+            
+            <li>
+                <a href="/index.xml">RSS</a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-item sidebar-links">
+        <h3>Links</h3>
+        <ul>
+            
+            <li>
+                <a href="https://github.com/carlc27843" target="_blank"><span>GitHub</span></a>
+            </li>
+            
+            <li>
+                <a href="https://twitter.com/carlc27843" target="_blank"><span>twitter</span></a>
+            </li>
+            
+            <li>
+                <a href="https://carlc27843.itch.io/" target="_blank"><span>itch.io</span></a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-item sidebar-tags">
+        <h3>Tags</h3>
+        <div>
+            
+            <span>
+                <a href="/tags/lua/">lua</a>
+            </span>
+            
+            <span>
+                <a href="/tags/pico-8/">pico-8</a>
+            </span>
+            
+            <span>
+                <a href="/tags/script/">script</a>
+            </span>
+            
+        </div>
+    </div>
+    <div class="sidebar-item sidebar-toc">
+        <h3>Table of Contents</h3><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#picoscript-build-macro">Picoscript build macro</a></li>
+        <li><a href="#lua-bytecode">Lua bytecode</a></li>
+        <li><a href="#picoscript-bytecode">Picoscript bytecode</a></li>
+        <li><a href="#picoscript-bootstrap">Picoscript bootstrap</a></li>
+        <li><a href="#picoscript-operations">Picoscript operations</a></li>
+        <li><a href="#operation-tradeoffs">Operation tradeoffs</a></li>
+        <li><a href="#picoscript-limitations">Picoscript limitations</a></li>
+        <li><a href="#pico-8-nebulus-stats">PICO-8 Nebulus stats</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+</aside>
+
+        </div>
+        <div class="btn">
+    <div class="btn-menu" id="btn-menu">
+        <i class="iconfont icon-grid-sharp"></i>
+    </div>
+    <div class="btn-toggle-mode">
+        <i class="iconfont icon-contrast-sharp"></i>
+    </div>
+    <div class="btn-scroll-top">
+        <i class="iconfont icon-chevron-up-circle-sharp"></i>
+    </div>
+</div>
+<aside class="sidebar-mobile" style="display: none;">
+  <div class="sidebar-wrapper">
+    
+    <div class="sidebar-item sidebar-pages">
+        <h3>Pages</h3>
+        <ul>
+            
+            <li>
+                <a href="/">Posts</a>
+            </li>
+            
+            <li>
+                <a href="/index.xml">RSS</a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-item sidebar-links">
+        <h3>Links</h3>
+        <ul>
+            
+            <li>
+                <a href="https://github.com/carlc27843" target="_blank"><span>GitHub</span></a>
+            </li>
+            
+            <li>
+                <a href="https://twitter.com/carlc27843" target="_blank"><span>twitter</span></a>
+            </li>
+            
+            <li>
+                <a href="https://carlc27843.itch.io/" target="_blank"><span>itch.io</span></a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-item sidebar-tags">
+        <h3>Tags</h3>
+        <div>
+            
+            <span>
+                <a href="/tags/lua/">lua</a>
+            </span>
+            
+            <span>
+                <a href="/tags/pico-8/">pico-8</a>
+            </span>
+            
+            <span>
+                <a href="/tags/script/">script</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    
+    
+    <div class="sidebar-item sidebar-toc">
+        <h3>Table of Contents</h3>
+        <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#picoscript-build-macro">Picoscript build macro</a></li>
+        <li><a href="#lua-bytecode">Lua bytecode</a></li>
+        <li><a href="#picoscript-bytecode">Picoscript bytecode</a></li>
+        <li><a href="#picoscript-bootstrap">Picoscript bootstrap</a></li>
+        <li><a href="#picoscript-operations">Picoscript operations</a></li>
+        <li><a href="#operation-tradeoffs">Operation tradeoffs</a></li>
+        <li><a href="#picoscript-limitations">Picoscript limitations</a></li>
+        <li><a href="#pico-8-nebulus-stats">PICO-8 Nebulus stats</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+    
+    
+  </div>
+</aside>
+    </main>
+
+    <footer>
+    <div class="container-lg clearfix">
+        <div class="col-12 footer">
+            
+            <span>&copy; 2022-2022
+                <a href="https://carlc27843.github.io/">carlc27843</a>
+                 | <a href="https://carlc27843.github.io/">Source code</a> 
+                | Powered by <a href="https://github.com/dsrkafuu/hugo-theme-fuji/"
+                   target="_blank">Fuji-v2</a> &amp; <a href="https://gohugo.io/"
+                                                    target="_blank">Hugo</a> 
+            </span>
+        </div>
+    </div>
+</footer>
+
+    
+<script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.27.0/components/prism-core.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.27.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+
+
+<script defer src="/assets/js/fuji.min.js"></script>
+
+
+
+</body>
+
+</html>

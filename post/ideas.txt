@@ -1,0 +1,72 @@
+- picoscript
+- arithmetic coding
+- px9 + arithmetic coding
+- picoscript compression
+- pico-8 hi-res and hi-color
+- 
+
+
+In the internal table format used by picoscript it looks more like:
+
+```lua
+{
+  code=
+  {
+    {
+      pc=1, line=4, opcode=50, opname='CLOSURE', 
+      a=0, 
+      b=0, bmode='u'
+    },
+    {
+      pc=2, line=1, opcode=8, opname='SETTABUP',
+      a=0, 
+      b='glstate', bkindex=1, bmode='k', 
+      c=0, cmode='r',
+      upvalname='_ENV'
+    },
+    {
+      pc=3, line=4, opcode=44, opname='RETURN',
+      a=0, 
+      b=1, bmode='u',
+    }
+  },
+  funs=
+  {
+    {
+      code=
+      {
+        {
+          pc=1, line=2, opcode=8, opname='SETTABUP', 
+          a=0, 
+          b='glstn', bkindex=1, bmode=k,
+          c=0, clocvalname='st', cmode=r,
+          upvalname='_ENV'
+        },
+        {
+          pc=2, line=3, opcode=8, opname='SETTABUP',
+          a=0,
+          b='bblf', bkindex=2, bmode='k',
+          c=1, ckindex=3, cmode='k',
+          upvalname='_ENV'
+        },
+        {
+          pc=3, line=4, opcode=44, opname='RETURN',
+          a=0,
+          b=1, bmode='u',
+        }
+      }, 
+      funs={},
+      is_vararg=false, 
+      linedefined=1, lastlinedefined=4,
+      maxstacksize=2, numparams=1,
+      sizecode=3, sizek=3, sizelocvars=1, sizep=0, sizeupvalues=1,
+      srcname='(string)'
+    }
+  }, 
+  is_vararg=true,
+  linedefined=0, lastlinedefined=0, 
+  maxstacksize=2, numparams=0,
+  sizecode=3, sizek=1, sizelocvars=0, sizep=1, sizeupvalues=1,
+  srcname='(string)'
+}
+```

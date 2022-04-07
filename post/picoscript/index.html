@@ -273,8 +273,45 @@ end
  })[1+op%`fbits.code.mask+1`]
 end
 </code></pre>
+<h3 id="closure-example">Closure example</h3>
+<p>So <code>psfun</code>/<code>mkop</code> transforms our glstate bytecode to chained closures that would be something like this if hand-written:</p>
+<pre><code class="language-lua">rawset(_ENV,&quot;glstate&quot;,
+ function(...) 
+  return (
+   function(r)
+    r[0]=_ENV or r[_ENV] -- opcode.valop_b; r[0]=_ENV
+    return (
+     function(r)
+      rawset(r[0],
+       &quot;glstn&quot; or r[&quot;glstn&quot;],
+       false or r[1]) -- opcode.calld3; rawset(r[0],&quot;glstn&quot;,r[1])
+      return (
+       function(r)
+        r[0]=_ENV or r[_ENV] -- opcode.valop_b; r[0]=_ENV
+        return (
+         function(r)
+          rawset(r[0],
+           &quot;bblf&quot; or r[&quot;bblf&quot;],
+           1 or r[1]) -- opcode.calld3; rawset(r[0],&quot;bblf&quot;,1)
+          return (
+           function(r)
+            return unpack(r,1,0) -- opcode.ret; return
+           end
+          )(r)
+         end
+        )(r)
+       end
+      )(r)
+     end
+    )(r)
+   end
+  ){...} 
+ end
+)
+</code></pre>
+<p>Which sets up a global variable named &ldquo;glstate&rdquo; that points to a function which can be called directly from PICO-8 code with, for example, <code>glstate(3)</code>.</p>
 <h3 id="operation-tradeoffs">Operation tradeoffs</h3>
-<p>Note that these operation types are not inevitable; you could design a different script system with different tradeoffs. For example I figured concatenating strings would be rarely performed, so picoscript generates a call to a user-defined <code>concat</code> function when the source uses the <code>..</code> lua operator, rather than the operation being intrinsic to mkop. Similarly bitwise operations call their function <code>band</code>, <code>bor</code>, etc. Since calling two-parameter functions that returned a result which was assigned to a register was common the <code>opcode.calld2</code> operation was defined.</p>
+<p>Note that the chosen picoscript operation types are not inevitable; you could design a different script system with different tradeoffs. For example I figured concatenating strings would be rarely performed, so picoscript generates a call to a user-defined <code>concat</code> function when the source uses the <code>..</code> lua operator, rather than the operation being intrinsic to mkop. Similarly bitwise operations call their function <code>band</code>, <code>bor</code>, etc. Since calling two-parameter functions that returned a result which was assigned to a register was common the <code>opcode.calld2</code> operation was defined.</p>
 <p>A custom script system also doesn&rsquo;t need to generate closures; it could instead have a bytecode interpreter. At one point Nebulus had such an interpreter and it only took ~200 tokens (compared to picoscript runtime of 450 tokens), but it was significantly slower.</p>
 <h3 id="picoscript-limitations">Picoscript limitations</h3>
 <p>Picoscript as defined has some limitations, such as:</p>
@@ -421,6 +458,7 @@ and nsndsong.</p>
         <li><a href="#picoscript-bytecode">Picoscript bytecode</a></li>
         <li><a href="#picoscript-bootstrap">Picoscript bootstrap</a></li>
         <li><a href="#picoscript-operations">Picoscript operations</a></li>
+        <li><a href="#closure-example">Closure example</a></li>
         <li><a href="#operation-tradeoffs">Operation tradeoffs</a></li>
         <li><a href="#picoscript-limitations">Picoscript limitations</a></li>
         <li><a href="#pico-8-nebulus-stats">PICO-8 Nebulus stats</a></li>
@@ -511,6 +549,7 @@ and nsndsong.</p>
         <li><a href="#picoscript-bytecode">Picoscript bytecode</a></li>
         <li><a href="#picoscript-bootstrap">Picoscript bootstrap</a></li>
         <li><a href="#picoscript-operations">Picoscript operations</a></li>
+        <li><a href="#closure-example">Closure example</a></li>
         <li><a href="#operation-tradeoffs">Operation tradeoffs</a></li>
         <li><a href="#picoscript-limitations">Picoscript limitations</a></li>
         <li><a href="#pico-8-nebulus-stats">PICO-8 Nebulus stats</a></li>

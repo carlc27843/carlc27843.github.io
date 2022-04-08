@@ -332,8 +332,10 @@ end
 <li>picoscript runtime lua code: 456 tokens used</li>
 <li>ROM used for picoscripted functions: 7181 bytes</li>
 <li>lua chars for constant table (after minify): 1524 bytes (1090 compressed)</li>
+<li>lua memory difference before/after psboot: 621.2KB (closure/upvalue runtime memory)</li>
 </ul>
 <p>So after compression it averaged to about 2 bytes of ROM/chars for every picoscripted token.</p>
+<p>Note that 621.2KB is ~30% of the 2MB limit to lua memory, which is fine for Nebulus as the game&rsquo;s total lua memory usage never exceeds 60%. An interpreter is probably lighter on lua memory usage, so that&rsquo;s an option if a game is lua memory constrained.</p>
 <p>Here&rsquo;s a list of the functions that were picoscripted:
 progress,
 tbl,
